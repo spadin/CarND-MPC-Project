@@ -6,9 +6,21 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
+//
 // Setting to 10/0.1 seems like a good balance between too many computations
 // and too few. This number was reached by trial and error and by watching the
 // walkthrough.
+//
+// When I set N higher than 10, the car would run off the road right from the
+// start. The initial calculations that were being used to determine the
+// steering angle were not reliable.
+//
+// When I set dt lower than 0.1, the calculations would be way off as the car
+// was just getting started, causing the car to run off the road before it even
+// reached a speed of 10 mph. Setting dt higher than .1 made the first
+// calculation ahead of the car a little too far, which also made the car run
+// off the road.
+//
 size_t N = 10;
 double dt = 0.1;
 
@@ -49,23 +61,29 @@ class FG_eval {
     // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
     // NOTE: You'll probably go back and forth between this function and
     // the Solver function below.
+    //
+    // Cost calculation description
+    // Below, I calculate the cost and store it into fg[0]. I multiply the
+    // variables that are more important to minimize, such at cte and epsi so
+    // those values carry more weight. Meaning, if the cte or epsi increase
+    // even slightly, the cost grows by a factor of 2000.
 
     fg[0] = 0.0;
 
     for(int i = 0; i < N; i++) {
       fg[0] += 2000*CppAD::pow(vars[cte_start + i] - ref_cte, 2);
-      fg[0] += 2000*CppAD::pow(vars[epsi_start + i] - ref_epsi, 2);
+      fg[0] += 500*CppAD::pow(vars[epsi_start + i] - ref_epsi, 2);
       fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2);
     }
 
     for(int i = 0; i < N - 1; i++) {
-      fg[0] += 5*CppAD::pow(vars[delta_start + i], 2);
-      fg[0] += 5*CppAD::pow(vars[a_start + i], 2);
+      fg[0] += CppAD::pow(vars[delta_start + i], 2);
+      fg[0] += CppAD::pow(vars[a_start + i], 2);
     }
 
     for(int i = 0; i < N - 2; i++) {
-      fg[0] += 200*CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
-      fg[0] += 10*CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
+      fg[0] += CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
+      fg[0] += CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
     }
 
     fg[1 + x_start] = vars[x_start];
