@@ -6,6 +6,9 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
+// Setting to 10/0.1 seems like a good balance between too many computations
+// and too few. This number was reached by trial and error and by watching the
+// walkthrough.
 size_t N = 10;
 double dt = 0.1;
 
